@@ -333,146 +333,6 @@ class BinanceAPIManager {
     }
 }
 
-// Функции для работы с пользователями
-function isValidEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-}
-
-function handleRegister() {
-    const email = document.getElementById('registerEmail').value.trim();
-    const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('registerConfirmPassword')?.value;
-
-    // Валидация полей
-    if (!email || !password || !confirmPassword) {
-        showNotification('Ошибка', 'Все поля обязательны для заполнения');
-        return;
-    }
-
-    if (!isValidEmail(email)) {
-        showNotification('Ошибка', 'Введите корректный email');
-        return;
-    }
-
-    if (password.length < 8) {
-        showNotification('Ошибка', 'Пароль должен содержать минимум 8 символов');
-        return;
-    }
-
-    if (password !== confirmPassword) {
-        showNotification('Ошибка', 'Пароли не совпадают');
-        return;
-    }
-
-    // Проверяем, есть ли уже такой пользователь
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const userExists = users.some(user => user.email === email);
-
-    if (userExists) {
-        showNotification('Ошибка', 'Пользователь с таким email уже зарегистрирован');
-        return;
-    }
-
-    // Создаем нового пользователя
-    const newUser = {
-        email: email,
-        password: btoa(password), // Простое шифрование (не безопасно для продакшена!)
-        createdAt: new Date().toISOString()
-    };
-
-    // Сохраняем пользователя
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('currentUser', JSON.stringify({ email: email }));
-    showNotification('Успех', 'Регистрация прошла успешно!');
-    closeRegisterModal();
-
-    // Обновляем интерфейс для зарегистрированного пользователя
-    updateUserUI(email);
-}
-
-function handleLogin() {
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-
-    if (!email || !password) {
-        showNotification('Ошибка', 'Введите email и пароль');
-        return;
-    }
-
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const user = users.find(u => u.email === email && atob(u.password) === password);
-
-    if (!user) {
-        showNotification('Ошибка', 'Неверный email или пароль');
-        return;
-    }
-
-    localStorage.setItem('currentUser', JSON.stringify({ email: email }));
-    showNotification('Успех', 'Вход выполнен успешно!');
-    closeLoginModal();
-    updateUserUI(email);
-}
-
-function handleLogout() {
-    localStorage.removeItem('currentUser');
-    showNotification('Успех', 'Вы успешно вышли из системы');
-    updateUserUI(null);
-    toggleMenu();
-}
-
-function updateUserUI(email) {
-    const userProfileBtn = document.getElementById('userProfileBtn');
-    const userName = document.getElementById('userName');
-    const loginMenuItem = document.getElementById('loginMenuItem');
-    const registerMenuItem = document.getElementById('registerMenuItem');
-    const logoutMenuItem = document.getElementById('logoutMenuItem');
-
-    if (email) {
-        // Пользователь авторизован
-        if (userProfileBtn) userProfileBtn.classList.remove('hidden');
-        if (userName) userName.textContent = email.split('@')[0];
-        if (loginMenuItem) loginMenuItem.classList.add('hidden');
-        if (registerMenuItem) registerMenuItem.classList.add('hidden');
-        if (logoutMenuItem) logoutMenuItem.classList.remove('hidden');
-    } else {
-        // Гость
-        if (userProfileBtn) userProfileBtn.classList.add('hidden');
-        if (loginMenuItem) loginMenuItem.classList.remove('hidden');
-        if (registerMenuItem) registerMenuItem.classList.remove('hidden');
-        if (logoutMenuItem) logoutMenuItem.classList.add('hidden');
-    }
-}
-
-function showNotification(title, message) {
-    // Создаем уведомление
-    const notification = document.createElement('div');
-    notification.className = 'fixed bottom-4 right-4 w-80 rounded-lg shadow-lg border-l-4 border-accent-green';
-    notification.style.backgroundColor = '#1E1E1E';
-    
-    notification.innerHTML = `
-        <div class="p-4">
-            <div class="flex justify-between items-start">
-                <div class="flex-1">
-                    <h3 class="font-medium text-light">${title}</h3>
-                    <p class="text-sm text-gray-300 mt-1">${message}</p>
-                </div>
-                <button class="ml-2 text-gray-400 hover:text-gray-300" onclick="this.parentElement.parentElement.parentElement.remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Автоматически закрываем через 5 секунд
-    setTimeout(() => {
-        notification.remove();
-    }, 5000);
-}
-
 // Копировать тикер в буфер обмена
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
@@ -1187,48 +1047,12 @@ function showMainPage() {
     window.location.href = 'index.html';
 }
 
-function showLoginForm() {
-    toggleMenu();
-    const modal = document.getElementById('loginModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-function closeLoginModal() {
-    const modal = document.getElementById('loginModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-function showRegisterForm() {
-    toggleMenu();
-    const modal = document.getElementById('registerModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-function closeRegisterModal() {
-    const modal = document.getElementById('registerModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', async () => {
     apiManager = new BinanceAPIManager();
 
     try {
         await apiManager.init();
-
-        // Проверяем авторизацию пользователя
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (currentUser && currentUser.email) {
-            updateUserUI(currentUser.email);
-        }
 
         // Инициализация сортируемых списков
         initializeSortableLists();
@@ -1285,13 +1109,6 @@ window.moveTickerDown = moveTickerDown;
 window.showCalculator = showCalculator;
 window.showWidget = showWidget;
 window.showMainPage = showMainPage;
-window.showLoginForm = showLoginForm;
-window.closeLoginModal = closeLoginModal;
-window.showRegisterForm = showRegisterForm;
-window.closeRegisterModal = closeRegisterModal;
-window.handleLogin = handleLogin;
-window.handleRegister = handleRegister;
-window.handleLogout = handleLogout;
 window.toggleMenu = toggleMenu;
 window.openTradingViewChart = openTradingViewChart;
 window.closeChartModal = closeChartModal;
