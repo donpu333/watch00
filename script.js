@@ -1029,24 +1029,6 @@ function toggleMenu() {
     }
 }
 
-function showCalculator() {
-    toggleMenu();
-    // Перенаправляем на страницу калькулятора
-    window.location.href = 'calculator.html';
-}
-
-function showWidget() {
-    toggleMenu();
-    // Перенаправляем на страницу виджета
-    window.location.href = 'widget.html';
-}
-
-function showMainPage() {
-    toggleMenu();
-    // Перенаправляем на главную страницу
-    window.location.href = 'index.html';
-}
-
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', async () => {
     apiManager = new BinanceAPIManager();
@@ -1106,9 +1088,6 @@ window.confirmManualPrice = confirmManualPrice;
 window.rateTicker = rateTicker;
 window.moveTickerUp = moveTickerUp;
 window.moveTickerDown = moveTickerDown;
-window.showCalculator = showCalculator;
-window.showWidget = showWidget;
-window.showMainPage = showMainPage;
 window.toggleMenu = toggleMenu;
 window.openTradingViewChart = openTradingViewChart;
 window.closeChartModal = closeChartModal;
